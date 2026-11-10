@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "visitor": {
+      "title": "Visitor",
+      "description": "Interactive romantic experience visitor session and responses",
+      "type": "object",
+      "properties": {
+        "visitorId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "visitorName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "snapchatAnswer": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "snapchatId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "memoryAnswer": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "memoryFollowUp": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "personalMessage": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "finalAnswer": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "completionStatus": {
+          "type": "string",
+          "enum": ["in_progress", "completed"]
+        },
+        "currentScene": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["visitorId", "visitorName", "createdAt", "updatedAt"]
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Admin authorization entry",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "username": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "username", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/visitors/{visitorId}": {
+      "schema": {
+        "$ref": "#/entities/visitor"
+      },
+      "description": "Visitor session documents tracking responses"
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/admin"
+      },
+      "description": "Admin verification documents to authenticate dashboard managers"
+    }
+  }
+}

@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny all unhandled access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity Validation Blueprint: Visitor
+    function isValidVisitor(data) {
+      return data.keys().hasAll(['visitorId', 'visitorName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'visitorId',
+          'visitorName',
+          'snapchatAnswer',
+          'snapchatId',
+          'memoryAnswer',
+          'memoryFollowUp',
+          'personalMessage',
+          'finalAnswer',
+          'completionStatus',
+          'currentScene',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.visitorId)
+        && data.visitorName is string && data.visitorName.size() >= 1 && data.visitorName.size() <= 100
+        && (!('snapchatAnswer' in data) || (data.snapchatAnswer is string && data.snapchatAnswer.size() <= 200))
+        && (!('snapchatId' in data) || (data.snapchatId is string && data.snapchatId.size() <= 100))
+        && (!('memoryAnswer' in data) || (data.memoryAnswer is string && data.memoryAnswer.size() <= 200))
+        && (!('memoryFollowUp' in data) || (data.memoryFollowUp is string && data.memoryFollowUp.size() <= 1000))
+        && (!('personalMessage' in data) || (data.personalMessage is string && data.personalMessage.size() <= 2000))
+        && (!('finalAnswer' in data) || (data.finalAnswer is string && data.finalAnswer.size() <= 50))
+        && (!('completionStatus' in data) || (data.completionStatus in ['in_progress', 'completed']))
+        && (!('currentScene' in data) || (data.currentScene is number && data.currentScene >= 1 && data.currentScene <= 12));
+    }
+
+    // Collection: Visitors
+    match /visitors/{visitorId} {
+      // Allow reading visitor documents and listing visitors for the admin dashboard
+      allow read, list: if true;
+
+      // Progressive save for visitor session
+      allow create: if isValidId(visitorId)
+        && incoming().visitorId == visitorId
+        && isValidVisitor(incoming());
+
+      allow update: if isValidId(visitorId)
+        && isValidVisitor(incoming())
+        && incoming().visitorId == existing().visitorId;
+
+      allow delete: if true;
+    }
+
+    // Collection: Admins
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Dil Se — An Interactive Romantic Journey",
+  "description": "A cinematic romantic interactive website featuring personalized scenes, heartfelt shayari, memory sharing, celebration with gift box reveal, romantic photo album, and a private admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
