@@ -18,7 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { VisitorData } from '../../types';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 interface AdminDashboardProps {
@@ -96,21 +96,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/visitor/${id}`, {
+      await fetch(`/api/admin/visitor/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        setVisitors((prev) => prev.filter((v) => v.visitorId !== id));
-        if (selectedVisitor?.visitorId === id) {
-          setSelectedVisitor(null);
-        }
-      }
-    } catch (err) {
-      console.error('Delete failed', err);
-    } finally {
-      setDeletingId(null);
+    } catch {
+      // Ignore static host backend miss
     }
+
+    try {
+      await deleteDoc(doc(db, 'visitors', id));
+    } catch (err) {
+      console.warn('Direct delete error:', err);
+    }
+
+    setVisitors((prev) => prev.filter((v) => v.visitorId !== id));
+    if (selectedVisitor?.visitorId === id) {
+      setSelectedVisitor(null);
+    }
+    setDeletingId(null);
   };
 
   // Filter visitors
